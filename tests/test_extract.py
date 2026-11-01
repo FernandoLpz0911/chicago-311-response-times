@@ -27,7 +27,7 @@ def _query(call):
 
 def test_build_params_first_run_filters_on_seed_date_only():
     assert build_params(None, "2023-01-01", 50) == {
-        "$select": ":id,:updated_at,*",
+        "$select": "*,:id,:updated_at",
         "$where": "created_date >= '2023-01-01'",
         "$order": ":updated_at,:id",
         "$limit": "50",
