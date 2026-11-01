@@ -46,8 +46,17 @@ def load_page(conn: psycopg.Connection, rows: list[dict[str, Any]]) -> Watermark
     refetches this page.
     """
     watermark = watermark_from_row(rows[-1])
+    records = []
+    for row in rows:
+        try:
+            records.append(parse_record(row))
+        except (ValueError, TypeError, KeyError) as exc:
+            raise ValueError(
+                f"cannot parse row sr_number={row.get('sr_number')!r} "
+                f":id={row.get(':id')!r}: {type(exc).__name__}: {exc}"
+            ) from exc
     with conn.transaction():
-        upsert_records(conn, [parse_record(r) for r in rows])
+        upsert_records(conn, records)
         set_watermark(conn, watermark)
     return watermark
 
