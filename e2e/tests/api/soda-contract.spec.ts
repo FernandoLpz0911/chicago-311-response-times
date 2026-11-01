@@ -58,12 +58,15 @@ test('dataset metadata still has every field the loader reads, with the same typ
   }
 });
 
+// The loader's $select, as built by pipeline/extract.py: the 16 source fields, then the
+// system fields.
+const LOADER_SELECT = [...Object.keys(LOADER_FIELDS), ':id', ':updated_at'].join(',');
+
 test('rows carry system fields and timestamps in the formats the parser expects', async ({
   request,
 }) => {
   const rows = await soql(request, {
-    // The portal requires * first; ':id,:updated_at,*' is rejected with HTTP 400.
-    $select: '*,:id,:updated_at',
+    $select: LOADER_SELECT,
     $where: ONE_DAY,
     $limit: '5',
   });
@@ -74,6 +77,15 @@ test('rows carry system fields and timestamps in the formats the parser expects'
     expect(row.created_date).toMatch(FLOATING_TIMESTAMP);
     expect(typeof row.sr_number).toBe('string');
     expect(typeof row.duplicate).toBe('boolean');
+  }
+});
+
+test('the loader $select is accepted and every named field comes back', async ({ request }) => {
+  const rows = await soql(request, { $select: LOADER_SELECT, $where: ONE_DAY, $limit: '50' });
+  // Socrata omits null fields per row, so a field is present if any returned row has it.
+  const seen = new Set(rows.flatMap((r) => Object.keys(r)));
+  for (const field of [...Object.keys(LOADER_FIELDS), ':id', ':updated_at']) {
+    expect(seen.has(field), `field ${field}`).toBe(true);
   }
 });
 

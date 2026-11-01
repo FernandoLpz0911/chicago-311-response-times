@@ -27,7 +27,11 @@ def _query(call):
 
 def test_build_params_first_run_filters_on_seed_date_only():
     assert build_params(None, "2023-01-01", 50) == {
-        "$select": "*,:id,:updated_at",
+        "$select": (
+            "sr_number,sr_type,sr_short_code,owner_department,status,origin,parent_sr_number,"
+            "created_date,closed_date,last_modified_date,duplicate,legacy_record,"
+            "ward,community_area,latitude,longitude,:id,:updated_at"
+        ),
         "$where": "created_date >= '2023-01-01'",
         "$order": ":updated_at,:id",
         "$limit": "50",
