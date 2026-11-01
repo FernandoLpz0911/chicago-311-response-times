@@ -2,6 +2,9 @@
 
 Keyset paging (rather than $offset) means a row that changes mid-run moves to the end of
 the ordering instead of shifting every later row and causing one to be skipped.
+
+Socrata's `:id` order is its internal order, not lexicographic, so ids must only be compared
+by the API (`$where` and `$order`), never in Python or Postgres.
 """
 
 import time

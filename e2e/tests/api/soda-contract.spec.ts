@@ -122,6 +122,34 @@ test('keyset paging on (:updated_at, :id) neither skips nor repeats rows', async
   expect(paged).toEqual(ten.map((r) => r.sr_number));
 });
 
+test('keyset condition agrees with :id order inside one shared :updated_at', async ({
+  request,
+}) => {
+  test.setTimeout(180_000);
+  // :id order is Socrata's internal order, not lexicographic. The loader relies on
+  // ':id >' and '$order=:id' agreeing within a timestamp, and one timestamp can hold
+  // tens of thousands of rows.
+  const [group] = await soql(request, {
+    $select: ':updated_at,count(*) as n',
+    $group: ':updated_at',
+    $order: 'n DESC',
+    $limit: '1',
+  });
+  const updatedAt = String(group[':updated_at']);
+  const order = { $select: ':id,:updated_at', $order: ':updated_at,:id' };
+  const [r1, r2, r3] = await soql(request, {
+    ...order,
+    $where: `:updated_at = '${updatedAt}'`,
+    $limit: '3',
+  });
+  const next = await soql(request, {
+    ...order,
+    $where: `:updated_at = '${updatedAt}' AND :id > '${r1[':id']}'`,
+    $limit: '2',
+  });
+  expect(next.map((r) => r[':id'])).toEqual([r2[':id'], r3[':id']]);
+});
+
 test('a malformed query is rejected with HTTP 400 and an error code', async ({ request }) => {
   const response = await request.get(RESOURCE, {
     params: { $where: 'no_such_column > 1', $limit: '1' },
