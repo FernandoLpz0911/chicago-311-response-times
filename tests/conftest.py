@@ -1,4 +1,6 @@
+import json
 import os
+from pathlib import Path
 
 import psycopg
 import pytest
@@ -34,3 +36,27 @@ def conn(database_url):
     apply_migrations(connection)
     yield connection
     connection.close()
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+def raw_rows():
+    """13 API-shaped rows; see the table in the implementation plan, Task 4."""
+    return json.loads((FIXTURES / "sample_311.json").read_text())
+
+
+@pytest.fixture
+def area_rows():
+    return json.loads((FIXTURES / "community_areas.json").read_text())
+
+
+@pytest.fixture
+def loaded(conn, raw_rows, area_rows):
+    """The test database with every fixture row and both community areas loaded."""
+    from pipeline.load import load_community_areas, load_page
+
+    load_page(conn, raw_rows)
+    load_community_areas(conn, area_rows)
+    return conn
