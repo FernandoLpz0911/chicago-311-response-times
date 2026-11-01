@@ -19,11 +19,20 @@ export class DatasetPage {
     return this.page.getByRole('heading', { name: /^Columns/ });
   }
 
+  // The page-size dropdown has no accessible name, so scope it to the tab panel that
+  // holds the Columns heading. No .first(): a second combobox there should fail loudly.
+  get pageSizeSelect(): Locator {
+    return this.page
+      .getByRole('tabpanel')
+      .filter({ has: this.columnsSection })
+      .getByRole('combobox');
+  }
+
   // The columns table shows 15 of 39 rows by default; switch the (unnamed)
   // page-size dropdown to 100 so every column name is in the page.
   async showAllColumns(): Promise<void> {
     await this.columnsSection.scrollIntoViewIfNeeded();
-    await this.page.getByRole('combobox').first().click();
+    await this.pageSizeSelect.click();
     await this.page.getByRole('option', { name: '100', exact: true }).click();
   }
 

@@ -41,7 +41,7 @@ test.describe('311 Service Requests dataset page', () => {
 });
 
 test('catalog search finds the dataset', async ({ page }) => {
-  await page.goto('/browse?q=311%20Service%20Requests');
+  await page.goto('/browse?q=311%20Service%20Requests', { waitUntil: 'domcontentloaded' });
   const result = page.getByRole('link', { name: '311 Service Requests', exact: true }).first();
   await expect(result).toBeVisible();
   await result.click();
