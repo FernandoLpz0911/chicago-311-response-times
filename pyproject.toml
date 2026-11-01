@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chi311"
+version = "0.1.0"
+description = "Chicago 311 response times: incremental loader, analysis SQL, and tests"
+requires-python = ">=3.12"
+dependencies = ["requests>=2.32", "psycopg[binary]>=3.2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-cov>=5.0", "responses>=0.25", "ruff>=0.6"]
+
+[project.scripts]
+chi311 = "pipeline.cli:main"
+
+[tool.setuptools]
+packages = ["pipeline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["pipeline"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
