@@ -39,7 +39,7 @@ def build_params(watermark: Watermark | None, seed_date: str, limit: int) -> dic
             f" OR (:updated_at = '{watermark.updated_at}' AND :id > '{watermark.row_id}'))"
         )
     return {
-        "$select": ":id,:updated_at,*",
+        "$select": "*,:id,:updated_at",
         "$where": where,
         "$order": ":updated_at,:id",
         "$limit": str(limit),
