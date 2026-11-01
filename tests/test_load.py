@@ -109,3 +109,16 @@ def test_load_community_areas_upserts(conn, area_rows):
     assert conn.execute(
         "SELECT area_number, name FROM ref.community_areas ORDER BY 1"
     ).fetchall() == [(1, "ROGERS PARK"), (2, "WEST RIDGE")]
+
+
+def test_load_page_names_the_bad_row_and_stores_nothing(conn, raw_rows):
+    load_page(conn, raw_rows[:5])
+    before = _snapshot(conn)
+    watermark = get_watermark(conn)
+    bad = raw_rows[5] | {"ward": "N/A"}
+    page = [*raw_rows[6:8], bad]
+    with pytest.raises(ValueError, match=bad["sr_number"]) as excinfo:
+        load_page(conn, page)
+    assert bad[":id"] in str(excinfo.value)
+    assert _snapshot(conn) == before
+    assert get_watermark(conn) == watermark
