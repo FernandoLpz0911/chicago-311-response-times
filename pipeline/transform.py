@@ -19,6 +19,9 @@ _BOOLS = ("duplicate", "legacy_record")
 _INTS = ("ward", "community_area")
 _FLOATS = ("latitude", "longitude")
 
+# The API fields parse_record reads, in the order the loader selects them.
+SOURCE_FIELDS = _TEXT + _TIMESTAMPS + _BOOLS + _INTS + _FLOATS
+
 
 def _present(value: Any) -> bool:
     return value is not None and value != ""

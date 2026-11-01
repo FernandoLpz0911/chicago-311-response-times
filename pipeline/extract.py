@@ -12,6 +12,7 @@ from typing import Any
 import requests
 
 from pipeline.config import AREAS_URL, DATASET_URL, PAGE_SIZE, SEED_DATE
+from pipeline.transform import SOURCE_FIELDS
 
 MAX_ATTEMPTS = 5
 REQUEST_TIMEOUT = 120  # seconds; a 50,000-row page can be slow
@@ -39,7 +40,7 @@ def build_params(watermark: Watermark | None, seed_date: str, limit: int) -> dic
             f" OR (:updated_at = '{watermark.updated_at}' AND :id > '{watermark.row_id}'))"
         )
     return {
-        "$select": "*,:id,:updated_at",
+        "$select": ",".join((*SOURCE_FIELDS, ":id", ":updated_at")),
         "$where": where,
         "$order": ":updated_at,:id",
         "$limit": str(limit),
