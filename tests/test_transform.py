@@ -75,7 +75,10 @@ def test_parse_record_accepts_string_booleans_and_float_strings():
 
 
 def test_parse_record_treats_empty_strings_as_missing():
-    record = parse_record(API_ROW | {"origin": "", "community_area": "", "closed_date": ""})
+    record = parse_record(
+        API_ROW | {"origin": "", "community_area": "", "closed_date": "", "duplicate": ""}
+    )
     assert record["origin"] is None
     assert record["community_area"] is None
     assert record["closed_date"] is None
+    assert record["duplicate"] is None

@@ -25,7 +25,9 @@ def _present(value: Any) -> bool:
 
 
 def _bool(value: Any) -> bool | None:
-    if isinstance(value, bool) or value is None:
+    if not _present(value):
+        return None
+    if isinstance(value, bool):
         return value
     return str(value).lower() == "true"
 
