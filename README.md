@@ -9,7 +9,7 @@ wait, and does it depend on where they live or how they report it? This project 
 311 service request since 2023 from the [Chicago Data Portal](https://data.cityofchicago.org/d/v6vf-nfxy)
 into PostgreSQL, answers those questions in SQL, and shows the answers in Tableau and Power BI
 dashboards. It is also a test-automation project: the pipeline and SQL are covered by pytest,
-and a Playwright suite checks the live portal every night for changes that would break the load.
+and a Playwright suite checks the live portal nightly and on every push for changes that would break the load.
 
 ## Findings
 
@@ -54,7 +54,7 @@ Socrata API (v6vf-nfxy)
 Requires Docker, Python 3.12, and Node 18 or newer.
 
 ```bash
-docker compose up -d db
+docker compose up -d --wait db
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 .venv/bin/chi311 migrate      # create tables and views
@@ -97,5 +97,6 @@ are attached to the workflow run.
 ## Known limitations
 
 - The portal sometimes re-publishes the whole dataset, which resets `:updated_at` on every row. The next `chi311 load` then refetches everything. That is slow but correct, because the load is idempotent.
+- Rows deleted on the portal stay in `raw.service_requests`, because the incremental load cannot see deletions.
 - Timestamps are Chicago local time with no time zone, as published.
 - Some request types (for example aircraft noise complaints) close almost instantly by design. Compare response times within a type, not across types.
