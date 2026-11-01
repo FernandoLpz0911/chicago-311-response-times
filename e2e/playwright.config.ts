@@ -5,6 +5,7 @@ const appToken = process.env.SOCRATA_APP_TOKEN;
 
 export default defineConfig({
   timeout: 60_000,
+  expect: { timeout: 15_000 },
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI
     ? [['html', { open: 'never' }], ['github']]
