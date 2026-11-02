@@ -7,8 +7,9 @@
 --     (crews logging work already done)
 --   * completed requests whose closed_date is missing or earlier than created_date
 --     (listed in mart.v_data_issues instead of disappearing silently)
---   * when the session sets chi311.min_minutes (chi311 export --min-minutes), completed
---     requests closed sooner than that many minutes after being opened; unset keeps them
+--   * completed requests closed within 6 minutes of being opened ("instant closures":
+--     no work to time). A session can change the cutoff with chi311.min_minutes
+--     (chi311 export --min-minutes); 0 keeps every completed request
 -- response_hours is set only for completed requests.
 CREATE OR REPLACE VIEW mart.v_requests_clean AS
 SELECT
@@ -41,6 +42,6 @@ WHERE duplicate IS NOT TRUE
   AND (
       status IS DISTINCT FROM 'Completed'
       OR closed_date - created_date >= make_interval(
-          mins => coalesce(nullif(current_setting('chi311.min_minutes', true), '')::int, 0)
+          mins => coalesce(nullif(current_setting('chi311.min_minutes', true), '')::int, 6)
       )
   );
