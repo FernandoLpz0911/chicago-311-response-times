@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from urllib.parse import parse_qs, urlparse
 
 import psycopg
 import pytest
@@ -100,7 +101,10 @@ def test_run_load_pages_through_api_then_resumes_from_watermark(conn, raw_rows):
     responses.reset()
     responses.add(responses.GET, URL, json=[])
     assert run_load(conn, requests.Session(), url=URL, page_size=10, log=messages.append) == 0
-    assert "row-0013" in responses.calls[0].request.url
+    saved = datetime.fromisoformat(get_watermark(conn).updated_at)
+    since = (saved - timedelta(days=1)).isoformat(timespec="milliseconds")
+    where = parse_qs(urlparse(responses.calls[0].request.url).query)["$where"][0]
+    assert where.endswith(f":updated_at >= '{since.replace('+00:00', 'Z')}'")
 
 
 def test_load_community_areas_upserts(conn, area_rows):
