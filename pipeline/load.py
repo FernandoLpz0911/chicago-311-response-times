@@ -2,13 +2,14 @@
 
 import time
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 
 import psycopg
 import requests
 
-from pipeline.config import DATASET_URL, PAGE_SIZE, SEED_DATE
-from pipeline.extract import Watermark, iter_pages, watermark_from_row
+from pipeline.config import DATASET_URL, PAGE_SIZE, REREAD_WINDOW, SEED_DATE
+from pipeline.extract import Watermark, iter_pages, rewind, watermark_from_row
 from pipeline.transform import COLUMNS, parse_record
 
 _UPSERT = (
@@ -69,14 +70,18 @@ def run_load(
     url: str = DATASET_URL,
     seed_date: str = SEED_DATE,
     page_size: int = PAGE_SIZE,
+    reread: timedelta = REREAD_WINDOW,
     sleep: Callable[[float], None] = time.sleep,
     log: Callable[[str], None] = print,
 ) -> int:
-    """Load every row changed since the saved watermark. Returns the number of rows loaded."""
+    """Load every row changed since the saved watermark, less the reread window.
+
+    Returns the number of rows loaded.
+    """
     total = 0
     pages = iter_pages(
         session,
-        get_watermark(conn),
+        rewind(get_watermark(conn), reread),
         seed_date=seed_date,
         page_size=page_size,
         url=url,

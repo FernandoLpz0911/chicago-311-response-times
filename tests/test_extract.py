@@ -1,3 +1,4 @@
+from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -11,6 +12,7 @@ from pipeline.extract import (
     fetch_community_areas,
     fetch_page,
     iter_pages,
+    rewind,
     watermark_from_row,
 )
 
@@ -44,6 +46,22 @@ def test_build_params_with_watermark_uses_keyset_condition():
         "created_date >= '2023-01-01' AND (:updated_at > '2024-03-01T06:00:00.000Z'"
         " OR (:updated_at = '2024-03-01T06:00:00.000Z' AND :id > 'row-0007'))"
     )
+
+
+def test_build_params_without_row_id_reads_from_the_timestamp_inclusive():
+    wm = Watermark(updated_at="2024-03-01T06:00:00.000Z", row_id=None)
+    assert build_params(wm, "2023-01-01", 50)["$where"] == (
+        "created_date >= '2023-01-01' AND :updated_at >= '2024-03-01T06:00:00.000Z'"
+    )
+
+
+def test_rewind_moves_the_watermark_back_and_drops_the_row_id():
+    wm = Watermark(updated_at="2024-03-02T06:00:05.120Z", row_id="row-0007")
+    assert rewind(wm, timedelta(days=1)) == Watermark("2024-03-01T06:00:05.120Z", None)
+
+
+def test_rewind_of_no_watermark_is_none():
+    assert rewind(None, timedelta(days=1)) is None
 
 
 def test_watermark_from_row():
