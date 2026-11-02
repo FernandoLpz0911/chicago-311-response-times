@@ -98,5 +98,6 @@ are attached to the workflow run.
 
 - The portal sometimes re-publishes the whole dataset, which resets `:updated_at` on every row. The next `chi311 load` then refetches everything. That is slow but correct, because the load is idempotent.
 - Rows deleted on the portal stay in `raw.service_requests`, because the incremental load cannot see deletions.
+- The portal answers queries from several copies of the data, and a newly stamped batch can be missing from some copies for half an hour or more. Each `chi311 load` therefore rereads the last day behind its saved watermark. A row still missing after a day is picked up the next time it changes.
 - Timestamps are Chicago local time with no time zone, as published.
 - Some request types (for example aircraft noise complaints) close almost instantly by design. Compare response times within a type, not across types.
