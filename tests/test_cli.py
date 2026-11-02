@@ -51,3 +51,16 @@ def test_export_command(loaded, database_url, monkeypatch, tmp_path, capsys):
     assert cli.main(["export", "--out", str(tmp_path)]) == 0
     assert "v_origin: 7 rows" in capsys.readouterr().out
     assert (tmp_path / "v_city_month.csv").is_file()
+
+
+def test_export_command_passes_min_minutes(conn, database_url, monkeypatch, tmp_path):
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    seen = {}
+
+    def fake_export_views(connection, out_dir, min_minutes):
+        seen["min_minutes"] = min_minutes
+        return {}
+
+    monkeypatch.setattr(cli, "export_views", fake_export_views)
+    assert cli.main(["export", "--out", str(tmp_path), "--min-minutes", "6"]) == 0
+    assert seen == {"min_minutes": 6}

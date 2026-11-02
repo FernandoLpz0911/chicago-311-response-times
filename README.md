@@ -80,6 +80,11 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 Set `SOCRATA_APP_TOKEN` for higher API rate limits (optional). Set `DATABASE_URL` to use a
 database other than the local Docker one.
 
+`chi311 export --min-minutes 6 --out exports/no-instant` writes the same CSVs without completed
+requests closed within 6 minutes of being opened (about 4% of them; see
+[docs/findings.md](docs/findings.md)). Analysis queries can do the same with
+`SET chi311.min_minutes = 6` in a `psql` session.
+
 Run the tests:
 
 ```bash
