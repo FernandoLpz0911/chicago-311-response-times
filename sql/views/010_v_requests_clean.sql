@@ -1,6 +1,10 @@
 -- The requests every metric is built from. Removes:
 --   * duplicates: the city flags a repeat report of the same problem with duplicate = true
 --   * 311 INFORMATION ONLY CALL: closed within seconds, would pull every median toward zero
+--   * other record-only requests, closed on intake with no work to time: Aircraft Noise
+--     Complaint (forwarded to the airport), Tree Trim Request (NO LONGER BEING ACCEPTED),
+--     Finance Parking Code Enforcement Review, and anything entered with origin Mass Entry
+--     (crews logging work already done)
 --   * completed requests whose closed_date is missing or earlier than created_date
 --     (listed in mart.v_data_issues instead of disappearing silently)
 -- response_hours is set only for completed requests.
@@ -24,6 +28,10 @@ SELECT
 FROM raw.service_requests
 WHERE duplicate IS NOT TRUE
   AND sr_type IS DISTINCT FROM '311 INFORMATION ONLY CALL'
+  AND sr_type IS DISTINCT FROM 'Aircraft Noise Complaint'
+  AND sr_type IS DISTINCT FROM 'Tree Trim Request (NO LONGER BEING ACCEPTED)'
+  AND sr_type IS DISTINCT FROM 'Finance Parking Code Enforcement Review'
+  AND origin IS DISTINCT FROM 'Mass Entry'
   AND (
       status IS DISTINCT FROM 'Completed'
       OR (closed_date IS NOT NULL AND closed_date >= created_date)
