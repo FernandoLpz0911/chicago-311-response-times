@@ -46,12 +46,12 @@ def _pothole_january(path):
     return next(r for r in _read(path) if r[:2] == ["Pothole in Street Complaint", "2024-01-01"])
 
 
-def test_export_can_leave_out_requests_closed_within_minutes(loaded, raw_rows, tmp_path):
+def test_export_leaves_out_requests_closed_within_6_minutes(loaded, raw_rows, tmp_path):
     _add_pothole_closed_after(loaded, raw_rows, "SR24-00000101", "2024-01-10T08:05:59.000")
     _add_pothole_closed_after(loaded, raw_rows, "SR24-00000102", "2024-01-10T08:06:00.000")
 
-    export_views(loaded, tmp_path / "all")
-    export_views(loaded, tmp_path / "worked", min_minutes=6)
+    export_views(loaded, tmp_path / "all", min_minutes=0)
+    export_views(loaded, tmp_path / "worked")
 
     # requests, completed: 3 fixture potholes plus both new ones, then without the 5:59 one
     assert _pothole_january(tmp_path / "all" / "v_type_month.csv")[2:4] == ["5", "5"]
@@ -60,6 +60,6 @@ def test_export_can_leave_out_requests_closed_within_minutes(loaded, raw_rows, t
 
 def test_min_minutes_does_not_outlive_the_export(loaded, raw_rows, tmp_path):
     _add_pothole_closed_after(loaded, raw_rows, "SR24-00000101", "2024-01-10T08:01:00.000")
-    export_views(loaded, tmp_path, min_minutes=6)
+    export_views(loaded, tmp_path, min_minutes=0)
     sql = "SELECT count(*) FROM mart.v_requests_clean WHERE sr_number = 'SR24-00000101'"
-    assert loaded.execute(sql).fetchone()[0] == 1
+    assert loaded.execute(sql).fetchone()[0] == 0

@@ -53,7 +53,10 @@ def test_export_command(loaded, database_url, monkeypatch, tmp_path, capsys):
     assert (tmp_path / "v_city_month.csv").is_file()
 
 
-def test_export_command_passes_min_minutes(conn, database_url, monkeypatch, tmp_path):
+@pytest.mark.parametrize(("args", "expected"), [([], 6), (["--min-minutes", "0"], 0)])
+def test_export_command_passes_min_minutes(
+    conn, database_url, monkeypatch, tmp_path, args, expected
+):
     monkeypatch.setenv("DATABASE_URL", database_url)
     seen = {}
 
@@ -62,5 +65,5 @@ def test_export_command_passes_min_minutes(conn, database_url, monkeypatch, tmp_
         return {}
 
     monkeypatch.setattr(cli, "export_views", fake_export_views)
-    assert cli.main(["export", "--out", str(tmp_path), "--min-minutes", "6"]) == 0
-    assert seen == {"min_minutes": 6}
+    assert cli.main(["export", "--out", str(tmp_path), *args]) == 0
+    assert seen == {"min_minutes": expected}

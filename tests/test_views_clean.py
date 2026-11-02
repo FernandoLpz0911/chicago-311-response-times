@@ -60,3 +60,35 @@ def test_clean_view_drops_record_only_requests(conn, raw_rows, sr_type, origin):
         "SELECT 1 FROM mart.v_requests_clean WHERE sr_number = 'SR24-00000099'"
     ).fetchone()
     assert found is None
+
+
+def _add_pothole_closed_at(conn, raw_rows, sr_number, closed):
+    from pipeline.load import load_page
+
+    row = {**raw_rows[0], "sr_number": sr_number,
+           "created_date": "2024-01-10T08:00:00.000", "closed_date": closed}
+    load_page(conn, [row])
+
+
+def _quick_closures_kept(conn):
+    rows = conn.execute(
+        "SELECT sr_number FROM mart.v_requests_clean WHERE sr_number LIKE 'SR24-000001%'"
+    ).fetchall()
+    return {r[0] for r in rows}
+
+
+def test_clean_view_drops_requests_closed_within_6_minutes(loaded, raw_rows):
+    _add_pothole_closed_at(loaded, raw_rows, "SR24-00000101", "2024-01-10T08:05:59.000")
+    _add_pothole_closed_at(loaded, raw_rows, "SR24-00000102", "2024-01-10T08:06:00.000")
+    assert _quick_closures_kept(loaded) == {"SR24-00000102"}
+
+
+@pytest.mark.parametrize(
+    ("min_minutes", "kept"),
+    [("0", {"SR24-00000101", "SR24-00000102"}), ("", {"SR24-00000102"})],
+)
+def test_clean_view_cutoff_can_be_changed_per_session(loaded, raw_rows, min_minutes, kept):
+    _add_pothole_closed_at(loaded, raw_rows, "SR24-00000101", "2024-01-10T08:05:59.000")
+    _add_pothole_closed_at(loaded, raw_rows, "SR24-00000102", "2024-01-10T08:06:00.000")
+    loaded.execute("SELECT set_config('chi311.min_minutes', %s, false)", [min_minutes])
+    assert _quick_closures_kept(loaded) == kept

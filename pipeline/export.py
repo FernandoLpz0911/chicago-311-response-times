@@ -15,11 +15,11 @@ EXPORT_VIEWS = (
 )
 
 
-def export_views(conn: psycopg.Connection, out_dir: Path, min_minutes: int = 0) -> dict[str, int]:
+def export_views(conn: psycopg.Connection, out_dir: Path, min_minutes: int = 6) -> dict[str, int]:
     """Write one CSV per view, header included. Returns data-row counts by view.
 
-    min_minutes > 0 leaves out completed requests closed sooner than that after being
-    opened; the setting lasts only for this export's transaction."""
+    Completed requests closed sooner than min_minutes after being opened are left out;
+    0 keeps them. The setting lasts only for this export's transaction."""
     out_dir.mkdir(parents=True, exist_ok=True)
     counts = {}
     with conn.transaction():
