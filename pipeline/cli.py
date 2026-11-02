@@ -24,8 +24,9 @@ def main(argv: list[str] | None = None) -> int:
     export.add_argument(
         "--min-minutes",
         type=int,
-        default=0,
-        help="leave out completed requests closed sooner than this many minutes after opening",
+        default=6,
+        help="leave out completed requests closed sooner than this many minutes after opening"
+        " (default 6; 0 keeps them)",
     )
     args = parser.parse_args(argv)
 

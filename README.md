@@ -59,6 +59,10 @@ Socrata API (v6vf-nfxy)
   rows, forwarded to the airport), `Tree Trim Request (NO LONGER BEING ACCEPTED)`,
   `Finance Parking Code Enforcement Review`, and any request with origin `Mass Entry` (crews
   logging work they have already done).
+- Completed requests closed within 6 minutes of being opened ("instant closures", about 4% of them;
+  see [docs/findings.md](docs/findings.md)) are dropped. The city does not say why they close so
+  fast (likely a report closed because a work order already exists), and they pull medians toward
+  zero. Set the cutoff to 0 to keep them (see below).
 - Response time is `closed_date - created_date`, for completed requests only.
 - Completed requests with no `closed_date`, or one before `created_date`, are listed in `mart.v_data_issues` instead of being dropped silently.
 - Areas are compared by community area (77, stable for decades), not by ward: ward boundaries were redrawn in May 2023, so 2023 ward values mix two maps.
@@ -80,10 +84,9 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
 Set `SOCRATA_APP_TOKEN` for higher API rate limits (optional). Set `DATABASE_URL` to use a
 database other than the local Docker one.
 
-`chi311 export --min-minutes 6 --out exports/no-instant` writes the same CSVs without completed
-requests closed within 6 minutes of being opened (about 4% of them; see
-[docs/findings.md](docs/findings.md)). Analysis queries can do the same with
-`SET chi311.min_minutes = 6` in a `psql` session.
+`chi311 export --min-minutes 0 --out exports/with-instant` writes the same CSVs with the instant
+closures kept; any other number moves the cutoff. Analysis queries can do the same with
+`SET chi311.min_minutes = 0` in a `psql` session.
 
 Run the tests:
 
