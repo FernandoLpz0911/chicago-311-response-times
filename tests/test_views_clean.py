@@ -39,3 +39,24 @@ def test_null_duplicate_flag_counts_as_not_duplicate(loaded):
         "SELECT 1 FROM mart.v_requests_clean WHERE sr_number = 'SR24-00000001'"
     ).fetchone()
     assert row == (1,)
+
+
+@pytest.mark.parametrize(
+    ("sr_type", "origin"),
+    [
+        ("Aircraft Noise Complaint", "Internet"),
+        ("Tree Trim Request (NO LONGER BEING ACCEPTED)", "Phone Call"),
+        ("Finance Parking Code Enforcement Review", "Internet"),
+        ("Graffiti Removal Request", "Mass Entry"),
+    ],
+)
+def test_clean_view_drops_record_only_requests(conn, raw_rows, sr_type, origin):
+    from pipeline.load import load_page
+
+    row = {**raw_rows[0], ":id": "row-0099", "sr_number": "SR24-00000099",
+           "sr_type": sr_type, "origin": origin}
+    load_page(conn, [row])
+    found = conn.execute(
+        "SELECT 1 FROM mart.v_requests_clean WHERE sr_number = 'SR24-00000099'"
+    ).fetchone()
+    assert found is None
