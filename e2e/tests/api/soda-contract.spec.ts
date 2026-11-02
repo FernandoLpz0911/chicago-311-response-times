@@ -129,19 +129,27 @@ test('keyset condition agrees with :id order inside one shared :updated_at', asy
   // :id order is Socrata's internal order, not lexicographic. The loader relies on
   // ':id >' and '$order=:id' agreeing within a timestamp, and one timestamp can hold
   // tens of thousands of rows.
+  //
+  // The portal re-stamps a large batch of rows (about 75k) roughly once a day, and while
+  // that batch is being published its rows come and go between queries. Only look at
+  // groups older than a day, which no longer change.
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 19);
   const [group] = await soql(request, {
     $select: ':updated_at,count(*) as n',
+    $where: `:updated_at < '${dayAgo}'`,
     $group: ':updated_at',
     $order: 'n DESC',
     $limit: '1',
   });
   const updatedAt = String(group[':updated_at']);
   const order = { $select: ':id,:updated_at', $order: ':updated_at,:id' };
-  const [r1, r2, r3] = await soql(request, {
+  const first = await soql(request, {
     ...order,
     $where: `:updated_at = '${updatedAt}'`,
     $limit: '3',
   });
+  expect(first).toHaveLength(3);
+  const [r1, r2, r3] = first;
   const next = await soql(request, {
     ...order,
     $where: `:updated_at = '${updatedAt}' AND :id > '${r1[':id']}'`,
