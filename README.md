@@ -13,8 +13,17 @@ and a Playwright suite checks the live portal nightly and on every push for chan
 
 ## Findings
 
-See [docs/findings.md](docs/findings.md). Each finding links to the SQL that produced it in
-[sql/analysis/](sql/analysis/).
+- Some services leave one in ten people waiting more than a year: half of bicycle requests
+  close within 8.3 days, but the slowest 10% take more than 502 days.
+- Where you live matters: an abandoned vehicle in Lincoln Park waits a median of 18 days; in the
+  Loop, 2.6 days.
+- Garbage cart repairs have slowed from a median of 15 days (2023) to 30 days (2026), while rat
+  baiting sped up from 6.7 to 4.5 days.
+- How you report mostly does not matter: for 7 of the 10 most common request types, phone,
+  website, and app are within 15% of each other.
+
+Details, caveats, and numbers in [docs/findings.md](docs/findings.md). Each finding links to the
+SQL that produced it in [sql/analysis/](sql/analysis/).
 
 ## Dashboards
 
@@ -45,6 +54,11 @@ Socrata API (v6vf-nfxy)
 
 - Duplicates (`duplicate = true`) are dropped.
 - `311 INFORMATION ONLY CALL` is dropped: these close within seconds and would drag medians toward zero.
+- Other record-only requests are dropped for the same reason: nearly all close within minutes of
+  being opened, so there is no response to time. These are `Aircraft Noise Complaint` (1.4 million
+  rows, forwarded to the airport), `Tree Trim Request (NO LONGER BEING ACCEPTED)`,
+  `Finance Parking Code Enforcement Review`, and any request with origin `Mass Entry` (crews
+  logging work they have already done).
 - Response time is `closed_date - created_date`, for completed requests only.
 - Completed requests with no `closed_date`, or one before `created_date`, are listed in `mart.v_data_issues` instead of being dropped silently.
 - Areas are compared by community area (77, stable for decades), not by ward: ward boundaries were redrawn in May 2023, so 2023 ward values mix two maps.
