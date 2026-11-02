@@ -5,11 +5,16 @@ the ordering instead of shifting every later row and causing one to be skipped.
 
 Socrata's `:id` order is its internal order, not lexicographic, so ids must only be compared
 by the API (`$where` and `$order`), never in Python or Postgres.
+
+The portal serves queries from several copies of the dataset, and a freshly stamped batch
+of rows can be missing from some copies for half an hour or more. Each run therefore starts
+a little behind the saved watermark (see `rewind`) and reads that stretch again.
 """
 
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 
 import requests
@@ -28,7 +33,15 @@ class ExtractError(RuntimeError):
 @dataclass(frozen=True)
 class Watermark:
     updated_at: str
-    row_id: str
+    row_id: str | None  # None: start at updated_at itself, inclusive
+
+
+def rewind(watermark: Watermark | None, window: timedelta) -> Watermark | None:
+    """Move the watermark back by window, so the next run rereads rows near the head."""
+    if watermark is None:
+        return None
+    earlier = datetime.fromisoformat(watermark.updated_at) - window
+    return Watermark(earlier.isoformat(timespec="milliseconds").replace("+00:00", "Z"), None)
 
 
 def watermark_from_row(row: dict[str, Any]) -> Watermark:
@@ -37,7 +50,9 @@ def watermark_from_row(row: dict[str, Any]) -> Watermark:
 
 def build_params(watermark: Watermark | None, seed_date: str, limit: int) -> dict[str, str]:
     where = f"created_date >= '{seed_date}'"
-    if watermark is not None:
+    if watermark is not None and watermark.row_id is None:
+        where += f" AND :updated_at >= '{watermark.updated_at}'"
+    elif watermark is not None:
         where += (
             f" AND (:updated_at > '{watermark.updated_at}'"
             f" OR (:updated_at = '{watermark.updated_at}' AND :id > '{watermark.row_id}'))"
