@@ -6,11 +6,9 @@ Layouts are rough; change them freely while building as long as the data rules b
 
 ## Before you build
 
-1. Regenerate the exports so they use the 6-minute rule: `.venv/bin/chi311 export`. The CSVs in
-   `exports/` from before the default changed still include instant closures.
-2. Finding 1 needs `v_type_summary.csv`, which `chi311 export` does not write yet (see
-   [Data gaps](#data-gaps)).
-3. Copy `exports/*.csv` and `dashboards/geo/community_areas.geojson` to the Windows machine.
+Follow [BUILD.md](BUILD.md): it has the checklist for copying the exports and the boundary file
+to the Windows machine, and step-by-step build notes for each dashboard and the Story. The
+exports in `exports/` already use the 6-minute rule and include `v_type_summary.csv`.
 
 ## Rules for every dashboard
 
@@ -85,8 +83,13 @@ percentile wait, in days, joined by a line. Log scale on the x axis, because the
 hours to over two years. Rows sorted by `Tail ratio`, highest first. Label the ratio at the
 right end of each row ("59x").
 
-**Filters:** `completed >= 1000` (fixed, not shown to the viewer). Top 15 by `Tail ratio`.
-Highlight Bicycle Request/Complaint in the accent colour.
+**Filters:** the same rows as the finding 1 table, picked the way
+[01_long_tail_types.sql](../../sql/analysis/01_long_tail_types.sql) picks them, all fixed and
+hidden from the viewer: `completed >= 1000`, then the top 15 by gap (`p90_hours - median_hours`),
+then `Tail ratio >= 6`. That leaves 6 rows, Bicycle Request/Complaint (59x) to Sewer Cave-In
+Inspection Request (6.8x). Do not take the top 15 by `Tail ratio` instead: that puts
+short-median types such as Street Light Pole Damage Complaint (7-hour median, 114x) on top, which
+does not match the finding. Highlight Bicycle Request/Complaint in the accent colour.
 
 ```
 Bicycle Request/Complaint        o----------------------------o  59x
@@ -220,7 +223,7 @@ latest full month, labelled with the month, not an aggregate over the range.
 2. **Map:** median days by community area for the selected type (`v_area_type`). Hidden or
    greyed out with "All types", since the export has no all-types row per area. Uses
    `v_area_centroid` labels for area names.
-3. **By channel:** bar of median days for Phone, Website, App, Other for the selected type
+3. **By channel:** bar of median days for Phone, Website and App for the selected type
    (`v_origin`).
 4. **Backlog:** bar of open requests by age bucket (`v_backlog`). Bucket labels already sort
    correctly ("1: <1 day" to "5: 90+ days").
@@ -245,7 +248,7 @@ groups."
 
 - **Type-level summary (needed for dashboard 1).** No export has median and 90th percentile per
   type over the whole period, and they cannot be rebuilt from `v_type_month` or `v_area_type`.
-  Add a `mart.v_type_summary` view (`sr_type, requests, completed, median_hours, p90_hours`,
-  over all of `v_requests_clean`) and add it to `EXPORT_VIEWS`.
+  Done: `mart.v_type_summary` (`sr_type, requests, completed, median_hours, p90_hours`, over
+  all of `v_requests_clean`) is now exported as `v_type_summary.csv`.
 - **Not needed:** channel by year (finding 4 says phone is slowest every year; the dashboard
   leaves that to the caption) and yearly medians by type (finding 3 uses monthly lines).
