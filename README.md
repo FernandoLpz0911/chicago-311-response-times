@@ -49,6 +49,7 @@ Socrata API (v6vf-nfxy)
 | `sql/analysis/` | one query per finding |
 | `tests/` | pytest unit and integration tests |
 | `e2e/` | Playwright TypeScript tests against the live portal |
+| `dashboards/geo/` | community area boundaries (GeoJSON) for filled maps |
 
 ### Cleaning rules
 
