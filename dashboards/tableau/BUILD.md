@@ -7,8 +7,9 @@ versions and may differ slightly in yours.
 
 ## 1. Get the data onto the Windows machine
 
-The CSVs in `exports/` were exported on 2026-11-04 under the 6-minute rule. Do not re-export
-unless the data changes. `exports/` is git-ignored, so the files have to be copied over.
+The CSVs in `exports/` were exported on 2026-11-04 under the 6-minute rule. Build the workbook
+from them; later monthly refreshes follow [REFRESH.md](REFRESH.md). `exports/` is git-ignored, so
+the files have to be copied over.
 
 1. On the Linux machine, bundle the seven exports and the boundary file:
 
@@ -20,7 +21,8 @@ unless the data changes. `exports/` is git-ignored, so the files have to be copi
    became the default, and it has no `v_type_summary.csv`.
 2. Move the zip to Windows (USB stick, cloud drive, or `scp`) and unzip it into one folder,
    for example `C:\chi311\data\`. Keep the folder: the workbook stores the paths.
-3. Check the files arrived whole. Data rows per file (not counting the header):
+3. Check the files arrived whole. Data rows per file in the 2026-11-04 export (not counting the
+   header):
 
    | File | Rows |
    |---|---|
@@ -80,7 +82,7 @@ same way.
 
 In `v_type_month`, `v_origin` and `areas`, create the Top 10 set on `sr_type`
 (right-click `sr_type` > Create > Set > Top tab > By field: Top 10 by `requests`, Sum). Call
-it `Top 10 types`. All three hold the same 10 types in this export:
+it `Top 10 types`. All three hold the same 10 types in the 2026-11-04 export:
 
 > Graffiti Removal Request, Abandoned Vehicle Complaint, Garbage Cart Maintenance, Rodent
 > Baiting/Rat Complaint, Tree Debris Clean-Up Request, Street Light Out Complaint, Pothole in
@@ -102,17 +104,36 @@ A quick check: hover over a mark. The tooltip value should equal the CSV value f
 grey `#BAB0AC` for context, blue `#4E79A7` for the accent and "slowed down", orange `#F28E2B`
 for "sped up". These are Tableau 10 colours and are safe for colour-blind viewers.
 
-**Footer.** One text object, copied to every dashboard:
+**Footer.** A small worksheet rather than a text object, so its date follows the data after a
+refresh:
 
-> Chicago 311 service requests created 2023-01-01 to 2026-11-01. Requests closed within 6
-> minutes are left out. Waits are medians of completed requests; open requests are not
-> counted. Source and code: https://github.com/FernandoLpz0911/chicago-311-response-times
+1. New sheet `Footer`, data source `v_city_month`. Create the calculated field
+   `Newest month = {MAX([month])}`.
+2. Drag `Newest month` to Text on the Marks card. Right-click it > Exact Date, and set it to
+   Discrete. Right-click > Format > Dates: Custom, `mmmm yyyy`.
+3. Click Text on the Marks card > `...` and replace the text with the footer below, inserting
+   the field with Insert > `Newest month`:
+
+   > Chicago 311 service requests created from January 2023 to <Newest month>; the newest
+   > month is partial. Requests closed within 6 minutes are left out. Waits are medians of
+   > completed requests; open requests are not counted. Source and code:
+   > https://github.com/FernandoLpz0911/chicago-311-response-times
+
+4. Left-align it, small font. Turn off the tooltip (Worksheet > Tooltip, untick Show tooltips)
+   and the sheet title.
+5. On every dashboard, drag `Footer` along the bottom, Fit: Entire View, about 60 px high, with
+   its title hidden. Text in a worksheet is not a link; to make the repo URL clickable, add
+   Dashboard > Actions > Add Action > Go to URL, source sheet `Footer`, run on Select.
+
+Check: the footer reads "... to November 2026; the newest month is partial." with the 2026-11-04
+export.
 
 **Dashboard size.** Fixed, 1200 x 800 (Dashboard > Size). Tableau Public shows fixed sizes
 reliably; automatic sizes reflow oddly when embedded.
 
-**Titles and captions.** Use the titles and captions from the sketch word for word. The numbers
-in them come from `docs/findings.md` and have been checked against these exports.
+**Titles and captions.** Use the titles and captions from the sketch word for word. Captions
+carry no numbers, so they stay true after a refresh unless the pattern itself changes; the
+numbers are in the charts and tooltips.
 
 ## 4. Dashboard 1: Long waits
 
@@ -233,7 +254,9 @@ For each panel:
    `First provisional month` (Minimum) to `Last full month` (Maximum), light grey fill, label
    "Still settling: many requests open".
 
-Check: the dashed part covers August to October 2026, and November 2026 is not drawn.
+Check: the dashed part covers the three full months before the snapshot month, and the
+snapshot month (the newest `month`) is not drawn. With the 2026-11-04 export that is August to
+October 2026 dashed and November 2026 absent.
 
 ## 7. Dashboard 4: How you report
 
@@ -263,8 +286,12 @@ This one has the most moving parts; build it last.
 
 - `Explore type` (String, List): add from field `v_type_month` `sr_type`, then add
   "All types" at the top. Current value: All types. Show as a single-value dropdown.
-- `Start month` and `End month` (Date, Range, step 1 month), from 2023-01-01 to 2026-10-01.
-  Show both controls (slider). A filter applies to one data source, but a parameter applies
+- `Start month` and `End month` (Date, Range, step 1 month). Set the range from field `month`
+  in `v_type_month`, refreshed when the workbook opens, so a refresh extends it. Current
+  values: `Start month` 2023-01-01; `End month` "Value when workbook opens" = `Last full month`
+  (create it in `v_type_month` if it is not there yet). If your version lacks these options,
+  type 2023-01-01 to the last full month (2026-10-01 for the 2026-11-04 export) and move the end
+  on each refresh. Show both controls (slider). A filter applies to one data source, but a parameter applies
   to all of them, which is why the type and month range are parameters rather than filters.
 
 **In every data source used here, add:**
@@ -326,9 +353,13 @@ the short navigation label.
 - Hover-check one mark per dashboard against its CSV row.
 - No sheet uses `SUM` or `AVG` on `median_hours`, `p90_hours` or a field built from them
   (search each sheet's Columns, Rows and Marks).
-- November 2026 does not appear on any trend.
-- Every dashboard has the footer.
-- Captions match the sketch.
+- The snapshot month (the newest `month`; November 2026 in the 2026-11-04 export) does not
+  appear on any trend, and the dashed part covers the three full months before it.
+- Every dashboard has the `Footer` worksheet, and it names the snapshot month.
+- `Top 10 types` holds the same 10 types in `v_type_month`, `v_origin` and `areas`, and they are
+  the 10 types `Panel order` names. If not, update `Trend group` and `Panel order` for
+  dashboard 3 and review the Building Violation flag on dashboards 2 and 4.
+- Captions match the sketch, and each still holds against its chart.
 
 ## 11. Publish and hand back
 
