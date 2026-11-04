@@ -12,6 +12,7 @@ EXPORT_VIEWS = (
     "v_backlog",
     "v_origin",
     "v_area_centroid",
+    "v_type_summary",
 )
 
 

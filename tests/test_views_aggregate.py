@@ -112,3 +112,14 @@ def test_area_centroid(loaded):
     assert rows[0]["longitude"] == pytest.approx(-87.67)
     assert rows[1]["latitude"] == pytest.approx(41.99)
     assert rows[1]["longitude"] == pytest.approx(-87.69)
+
+
+def test_type_summary_covers_the_whole_period(loaded):
+    rows = {
+        r["sr_type"]: _stats(r) for r in _query(loaded, "SELECT * FROM mart.v_type_summary")
+    }
+    # Potholes across January and February: completed hours [4, 10, 24, 48]
+    assert rows == {
+        POTHOLE: (6, 4, 17, 40.8),
+        GRAFFITI: (3, 2, 16, 27.2),
+    }

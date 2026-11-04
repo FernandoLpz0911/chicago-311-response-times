@@ -93,6 +93,7 @@ Holds the current watermark. It advances only after a page's upsert commits.
 - `v_backlog` — open requests by age bucket (<1 day, 1–7 days, 7–30 days, 30–90 days, 90+ days).
 - `v_origin` — response time by intake channel (phone, mobile app, internet, etc.).
 - `v_area_centroid` — community area centroid from request coordinates, for the Tableau map.
+- `v_type_summary` — per request type over the whole period: request count, completed count, median and p90 `response_hours`. Medians do not combine, so this cannot be rolled up from `v_type_month`.
 - `v_data_issues` — rows failing cleaning rules, with reason.
 
 ### Candidate findings
