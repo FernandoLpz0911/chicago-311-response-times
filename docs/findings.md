@@ -9,6 +9,10 @@ depends on what they report, where they live, or how they report it.
 closures, 2,747,930 requests remain, and 2,475,704 of them are completed with a usable response
 time.
 
+**Pinned.** These findings, their numbers and their screenshots come from the 2026-11-04 export
+and are rerun only by choice. The live dashboards on Tableau Public are refreshed monthly
+([REFRESH.md](../dashboards/tableau/REFRESH.md)), so they may be newer and differ.
+
 **Response time** is `closed_date - created_date` for completed requests. All figures are
 medians unless stated, because a few requests that stay open for years would distort a mean.
 
