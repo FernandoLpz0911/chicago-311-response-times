@@ -14,13 +14,14 @@ and a Playwright suite checks the live portal nightly and on every push for chan
 ## Findings
 
 - Some services leave one in ten people waiting more than a year: half of bicycle requests
-  close within 8.3 days, but the slowest 10% take more than 502 days.
+  close within 8.5 days, but the slowest 10% take more than 503 days.
 - Where you live matters: an abandoned vehicle in Lincoln Park waits a median of 18 days; in the
-  Loop, 2.6 days.
-- Garbage cart repairs have slowed from a median of 15 days (2023) to 30 days (2026), while rat
-  baiting sped up from 6.7 to 4.5 days.
-- How you report mostly does not matter: for 7 of the 10 most common request types, phone,
-  website, and app are within 15% of each other.
+  Loop, 2.7 days.
+- Garbage cart repairs have slowed from a median of 15.5 days (2023) to 30.5 days (2026), while rat
+  baiting sped up from 6.8 to 4.5 days.
+- How you report mostly does not matter: for 6 of the 10 most common request types, phone,
+  website, and app are within 15% of each other. Building violations are the exception: phone
+  reports take more than twice as long.
 
 Details, caveats, and numbers in [docs/findings.md](docs/findings.md). Each finding links to the
 SQL that produced it in [sql/analysis/](sql/analysis/).
