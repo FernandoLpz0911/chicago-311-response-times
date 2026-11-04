@@ -39,14 +39,22 @@ once as a set on `sr_type` in `v_type_month`: Top 10 by `SUM([requests])`. Reque
 medians) can be summed. The set should hold the same 10 types as findings 2 to 4; check it
 against the tables there. The margin at the bottom is thin: Building Violation (10th, 75,079
 requests) is only about 1,500 ahead of Tree Removal Inspection (11th), so a re-export could swap
-them.
+them. Each monthly refresh checks the set ([REFRESH.md](REFRESH.md)).
 
 **Units.** Show waits in days, one decimal (graffiti shows as 1.0 days, not 23.7 hours). One unit
 across the workbook beats switching between hours and days.
 
-**Footer on every dashboard:** "Chicago 311 service requests created 2023-01-01 to 2026-11-01.
-Requests closed within 6 minutes are left out. Waits are medians of completed requests; open
-requests are not counted." Plus a link to the GitHub repo.
+**Footer on every dashboard:** a small worksheet on `v_city_month`, not a fixed text box, so the
+date updates itself when the data is refreshed. Its text: "Chicago 311 service requests created
+from January 2023 to <newest month>; the newest month is partial. Requests closed within 6
+minutes are left out. Waits are medians of completed requests; open requests are not counted."
+`<newest month>` is `MAX([month])` shown as month and year (November 2026 in the 2026-11-04
+export). Plus a link to the GitHub repo.
+
+**Captions carry no numbers.** Each caption states its pattern in words; the numbers live in the
+chart and its tooltips. The dashboards are refreshed monthly ([REFRESH.md](REFRESH.md)), and a
+caption without numbers stays true unless the pattern itself changes, which each refresh checks.
+`docs/findings.md` keeps the numbers, pinned to the 2026-11-04 export.
 
 **Colour.** One neutral colour (grey) for context marks and one accent colour for the marks the
 caption talks about. For finding 3, one colour for slowed down and one for sped up. Use a
@@ -56,7 +64,8 @@ colour-blind-safe pair, such as Tableau's blue and orange.
 
 Settled here, for every trend chart (finding 3 and the explore page):
 
-- **Drop the snapshot month.** November 2026 has 66 completed requests out of 1,202. `Show month`
+- **Drop the snapshot month** (the newest month, which is partial). In the 2026-11-04 export,
+  November 2026 has 66 completed requests out of 1,202. `Show month`
   filters it out. Because it uses `{MAX([month])}`, it keeps working after a re-export.
 - **Mark the last three full months as provisional** (August to October 2026 in this
   snapshot). Many of their requests are still open: city-wide, 81% of August requests are
@@ -64,8 +73,8 @@ Settled here, for every trend chart (finding 3 and the explore page):
   medians will rise as those close. Draw them with a dashed line or lighter colour, using
   `Provisional` on the line's Detail and Line style. Add a shaded reference band over them,
   labelled "Still settling: many requests open".
-- **No year-to-date totals presented as a full year.** Where a year label appears, write
-  "2026 (to Nov 1)".
+- **No year-to-date totals presented as a full year.** Where a year label appears, mark the
+  newest year as partial, for example "2026 (to Nov 1)".
 
 Three months is a judgement call: it is where city-wide completion falls below 80%. Building
 Violation settles more slowly (71% complete in August, 92% in April), which the finding 3 caption
@@ -100,8 +109,8 @@ Water Lead Test Kit Request               o----------------o      12x
                                  o median   o 90th percentile
 ```
 
-**Caption:** "Half of bicycle requests close within 8.5 days, but one in ten takes more than 503
-days. A long tail can come from backlog clean-ups, when a department closes many old requests on
+**Caption:** "For these types, most requests close within days or weeks, but the slowest one in
+ten waits many times longer; bicycle requests have the longest tail. A long tail can come from backlog clean-ups, when a department closes many old requests on
 the same day, rather than from late work. Open requests are not counted, so the real tail is
 longer."
 
@@ -134,8 +143,8 @@ Vehicle Complaint (the headline number). Minimum 50 completed requests per area 
 +---------------------------+  O = fastest / slowest area
 ```
 
-**Caption:** "An abandoned vehicle reported in Lincoln Park waits a median of 18 days; in the
-Loop, 2.7 days. The comparison takes the two extremes of 77 areas and does not account for how
+**Caption:** "The same problem can wait several times longer in one community area than in
+another. The comparison takes the two extremes of 77 areas and does not account for how
 many requests an area sends or how serious they are."
 
 **Building Violation:** keep it in the strip, with a note in its tooltip: "Covers many kinds of
@@ -166,13 +175,12 @@ Tree Debris      Abandoned Veh.   Tree Emergency   Street Light     Graffiti
    grey            grey             grey             grey             grey
 ```
 
-**Caption:** "The median wait for a garbage cart repair doubled, from 15.5 days for 2023 requests
-to 30.5 days for 2026 requests. Building violations fell from 62 days to 22 days between 2023 and
-2025. Recent months are still settling: their medians will rise as open requests close. Tree
+**Caption:** "Garbage cart repairs, blue recycling carts and potholes wait longer than they did in
+2023; rat baiting and building violations are handled faster. Recent months are still settling: their medians will rise as open requests close. Tree
 types depend on storms and seasons."
 
-The yearly numbers in the caption come from `docs/findings.md`, not from the chart: yearly
-medians cannot be rebuilt from monthly ones.
+Yearly medians stay in `docs/findings.md`: they cannot be rebuilt from monthly ones, so the
+dashboard does not show them.
 
 ## Dashboard 4: How you report
 
@@ -196,9 +204,9 @@ Graffiti                   WAP
                         P Phone   W Website   A App
 ```
 
-**Caption:** "For 6 of the 10 busiest types, the fastest and slowest channel are within 15% of
-each other. A building violation reported by phone waits a median of 34.8 days, more than twice
-the 16.1 days for one reported on the website. The data does not say why; phone and website
+**Caption:** "For most of the busiest types, the channel a problem is reported on makes little
+difference. Building violations are the exception: phone reports wait far longer than website or
+app reports. The data does not say why; phone and website
 reports may describe different problems."
 
 ## Dashboard 5: Explore
