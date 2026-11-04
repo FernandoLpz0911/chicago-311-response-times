@@ -18,6 +18,7 @@ def test_export_writes_one_csv_per_view_with_header(loaded, tmp_path):
         "v_backlog": 2,
         "v_origin": 7,
         "v_area_centroid": 2,
+        "v_type_summary": 2,
     }
     for view in EXPORT_VIEWS:
         assert len(_read(out / f"{view}.csv")) == counts[view] + 1
