@@ -6,8 +6,9 @@ Layouts are rough; change them freely while building as long as the data rules b
 
 ## Before you build
 
-Follow [BUILD.md](BUILD.md): it has the checklist for copying the exports and the boundary file
-to the Windows machine, and step-by-step build notes for each dashboard and the Story. The
+Follow [BUILD.md](BUILD.md): it has the checklist for uploading the exports and the boundary
+file to Tableau Public's web editor, and step-by-step build notes for each dashboard and the
+Story. The
 exports in `exports/` already use the 6-minute rule and include `v_type_summary.csv`.
 
 ## Rules for every dashboard

@@ -30,6 +30,6 @@ Changes from the portal file, to make the join work without type conversions:
 
 ## Using it in Tableau
 
-Connect to the file under **Connect > To a File > Spatial file**, then add the export CSV as a
-second connection and relate or join the two on `community_area`. Both sides are whole numbers,
-so the join works as is.
+Upload the file as a spatial file (in Tableau Public's web editor, or **Connect > To a File >
+Spatial file** in Tableau Desktop), then add the export CSV as a second connection and relate
+or join the two on `community_area`. Both sides are whole numbers, so the join works as is.
