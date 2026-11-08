@@ -18,19 +18,27 @@ What it does not change:
 - The `.twbx` in `dashboards/tableau/` is replaced only when the workbook's design changes
   (sheets, calculations, captions), not on a data-only refresh.
 
-## 1. Load and export (Linux machine)
+## 1. Load and export
 
 ```bash
+docker compose up -d --wait db
 .venv/bin/chi311 load      # only the changes since the last run
 .venv/bin/chi311 export    # CSVs in exports/
-zip -j ~/chi311-tableau-data.zip exports/v_*.csv dashboards/geo/community_areas.geojson
 ```
 
-## 2. Refresh the workbook (Windows machine)
+## 2. Refresh the workbook (web editor)
 
-1. Move the zip to Windows and unzip it over `C:\chi311\data\`, replacing the old files. Keep
-   the same folder and file names: the workbook stores the paths.
-2. Open the workbook in Tableau Public Desktop and run Data > Refresh All Extracts.
+Uploaded files are copies: Tableau Public does not see the new CSVs until they are uploaded
+again.
+
+1. On the workbook's page on Tableau Public, click Edit to open it in the web editor.
+2. For each data source, go to its data source page and replace its file with the new export
+   of the same name (the data source's menu > Replace, or the file's menu > Edit connection or
+   Replace, whichever the editor offers). The boundary file `community_areas.geojson` does not
+   change and needs no upload.
+3. If the editor offers no way to swap a file in place, note it here on the first refresh and
+   find another route before the next one. Removing a file and adding it again can break every
+   sheet built on it, so do not do that on a finished workbook.
 
 ## 3. Check
 
@@ -49,13 +57,14 @@ zip -j ~/chi311-tableau-data.zip exports/v_*.csv dashboards/geo/community_areas.
 
 ## 4. Publish
 
-File > Save to Tableau Public As..., under the same name, "Chicago 311 response times", so it
-replaces the published workbook. Check that "Allow others to download" is still on.
+File > Save, under the same name, "Chicago 311 response times", so it replaces the published
+workbook. Check that "Allow others to download" is still on.
 
 ## 5. Back in the repo
 
 - **Data-only refresh:** commit nothing.
-- **Design changed:** save a local `chicago-311-response-times.twbx`, and through a PR into
+- **Design changed:** download the `.twbx` from the workbook's page on Tableau Public, rename it
+  `chicago-311-response-times.twbx`, and through a PR into
   `dev` replace the one in `dashboards/tableau/` and update [sketch.md](sketch.md) and
   [BUILD.md](BUILD.md) to match. Leave `docs/findings.md` and its screenshots as they are
   unless the findings are being rerun on purpose.

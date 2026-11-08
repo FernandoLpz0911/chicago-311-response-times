@@ -1,28 +1,32 @@
 # Building the Tableau workbook
 
-Step-by-step notes for building the workbook in Tableau Public Desktop (Tableau Desktop Public
-Edition) on Windows. [sketch.md](sketch.md) says *what* each dashboard shows; this page says *how*
-to build it. Where the two disagree, the sketch wins. Menu names are from recent Tableau
-versions and may differ slightly in yours.
+Step-by-step notes for building the workbook in Tableau Public's web editor, in a browser on
+the Linux machine. Tableau Public Desktop has no Linux version, so nothing is installed.
+[sketch.md](sketch.md) says *what* each dashboard shows; this page says *how* to build it. Where
+the two disagree, the sketch wins.
 
-## 1. Get the data onto the Windows machine
+The steps below were first written for Tableau Public Desktop. The web editor has most of the
+same features, but menus sit in different places and a few Desktop options may be missing.
+Where a step names a Desktop menu, find the same option in the web editor (usually the
+right-click menu on the field, the sheet, or the dashboard object). If an option is not there,
+use the fallback given in the step, or note the gap and work around it, then fix this page so
+the next build does not hit it again.
+
+## 1. Get the data ready
 
 The CSVs in `exports/` were exported on 2026-11-04 under the 6-minute rule. Build the workbook
-from them; later monthly refreshes follow [REFRESH.md](REFRESH.md). `exports/` is git-ignored, so
-the files have to be copied over.
+from them; later monthly refreshes follow [REFRESH.md](REFRESH.md).
 
-1. On the Linux machine, bundle the seven exports and the boundary file:
-
-   ```bash
-   zip -j ~/chi311-tableau-data.zip exports/v_*.csv dashboards/geo/community_areas.geojson
-   ```
+1. Sign in at [public.tableau.com](https://public.tableau.com) in Firefox or Chrome. Everything
+   you save there is public.
+2. The files to upload are the seven `exports/v_*.csv` files and
+   `dashboards/geo/community_areas.geojson`. Upload them straight from the repo folder; there
+   is nothing to copy or zip.
 
    Leave out `exports/no-instant/`. It is an old trial export from before the 6-minute rule
    became the default, and it has no `v_type_summary.csv`.
-2. Move the zip to Windows (USB stick, cloud drive, or `scp`) and unzip it into one folder,
-   for example `C:\chi311\data\`. Keep the folder: the workbook stores the paths.
-3. Check the files arrived whole. Data rows per file in the 2026-11-04 export (not counting the
-   header):
+3. Check the files before uploading. Data rows per file in the 2026-11-04 export (not counting
+   the header):
 
    | File | Rows |
    |---|---|
@@ -35,17 +39,25 @@ the files have to be copied over.
    | `v_type_summary.csv` | 103 |
    | `community_areas.geojson` | 77 features |
 
+   To check on Linux: `wc -l exports/v_*.csv` (one more than the table, for the header) and
+   `python3 -c "import json; print(len(json.load(open('dashboards/geo/community_areas.geojson'))['features']))"`.
    In Tableau, the data source page shows the row count under the grid.
 
 ## 2. Data sources
 
-Make one data source per file (Connect > To a File > Text file, or Spatial file for the
-GeoJSON). Rename each data source after its file. Separate sources keep every sheet at the grain
-of one export, which is what the "never combine medians" rule needs.
+Start with your profile > Create a Viz, and upload the first file. Add each further file as its
+own data source (Data > New Data Source, then upload it). Make one data source per file and
+rename each after its file. Separate sources keep every sheet at the grain of one export, which
+is what the "never combine medians" rule needs.
 
-The one exception is the map data source for dashboards 2 and 5: connect to
-`community_areas.geojson`, then drag `v_area_type.csv` onto the canvas as a related table, with
-the relationship `community_area = community_area`. Call it `areas`.
+The one exception is the map data source for dashboards 2 and 5: upload
+`community_areas.geojson`, then add `v_area_type.csv` to the same data source and drag it onto
+the canvas as a related table, with the relationship `community_area = community_area`. Call it
+`areas`.
+
+Save early (File > Save) and often. The workbook lives only on Tableau Public; there is no local
+file to fall back on. Saving publishes it to your profile, so keep it hidden from your profile
+until it is finished if you do not want half-built work on show.
 
 After connecting, check the field types on the data source page:
 
@@ -59,7 +71,8 @@ After connecting, check the field types on the data source page:
 ### Calculated fields
 
 Create the sketch's calculated fields in each data source that needs them (Analysis > Create
-Calculated Field). Copy them across with right-click > Copy, then Paste in the other source.
+Calculated Field, or right-click in the Data pane > Create Calculated Field). If the web editor
+cannot copy a field from one source to another, create it again from the formula below.
 
 | Field | Formula | Data sources |
 |---|---|---|
@@ -76,7 +89,8 @@ origin `Phone` go to Other; that matches the finding, so leave it.
 
 Format `Median days` and `P90 days` as Number (Custom), 1 decimal place, suffix " days"
 (right-click the field > Default Properties > Number Format). Every chart then shows days the
-same way.
+same way. If the web editor has no default number format or no suffix, set 1 decimal place on
+each sheet instead and put "days" in the axis title and tooltip text.
 
 ### Top 10 set
 
@@ -134,6 +148,20 @@ reliably; automatic sizes reflow oddly when embedded.
 **Titles and captions.** Use the titles and captions from the sketch word for word. Captions
 carry no numbers, so they stay true after a refresh unless the pattern itself changes; the
 numbers are in the charts and tooltips.
+
+**Dashboard actions in the web editor.** Dashboards 2 and 5 use dashboard actions: a Change Parameter action (dashboard 2), a Go to URL
+action (the footer) and a Highlight action (dashboard 5). Look for them under Dashboard >
+Actions in the web editor. If the web editor cannot create one of them:
+
+- **Change Parameter (dashboard 2):** leave it out. The `Selected type` dropdown already sets
+  the map's type; clicking a strip row is only a shortcut.
+- **Go to URL (footer):** leave the URL as plain text in the footer, or add a small text object
+  with the link.
+- **Highlight (dashboard 5):** turn on the highlighter for `area_name` instead (right-click the
+  field on the map sheet > Show Highlighter), or leave it out.
+
+Dynamic zone visibility (dashboard 5) works the same way: if it is missing, show the city and
+type containers side by side, each with a title saying which one applies.
 
 ## 4. Dashboard 1: Long waits
 
@@ -363,13 +391,15 @@ the short navigation label.
 
 ## 11. Publish and hand back
 
-1. File > Save to Tableau Public As..., name "Chicago 311 response times". In the workbook's
-   settings on Tableau Public, turn on "Allow others to download" so the `.twbx` is
-   downloadable, and set the Story as the first sheet shown.
-2. Save a local copy as `chicago-311-response-times.twbx` (File > Save As, if your version
-   allows saving locally; otherwise download it from your Tableau Public profile).
-3. Screenshot each dashboard (Dashboard > Export Image, PNG) as
-   `dashboard-1-long-waits.png` to `dashboard-5-explore.png`.
+1. File > Save, name "Chicago 311 response times". In the workbook's settings on Tableau
+   Public, turn on "Allow others to download" so the `.twbx` is downloadable, and set the Story
+   as the first sheet shown.
+2. Download the `.twbx` from the workbook's page on Tableau Public (the Download button >
+   Tableau Workbook) and rename it `chicago-311-response-times.twbx`. The web editor cannot save
+   a local copy itself.
+3. Screenshot each dashboard as `dashboard-1-long-waits.png` to `dashboard-5-explore.png`: on
+   the workbook's page on Tableau Public, Download > Image, or a 1200 x 800 screenshot of the
+   dashboard in the browser.
 4. Bring back to the repo: the `.twbx`, the five PNGs, and the Tableau Public URL. An agent
    session then commits the `.twbx` to `dashboards/tableau/`, writes
    `dashboards/tableau/README.md` with the link, puts the PNGs in `docs/img/`, and embeds them
