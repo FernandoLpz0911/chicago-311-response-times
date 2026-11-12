@@ -11,6 +11,8 @@ into PostgreSQL, answers those questions in SQL, and shows the answers in Tablea
 dashboards. It is also a test-automation project: the pipeline and SQL are covered by pytest,
 and a Playwright suite checks the live portal nightly and on every push for changes that would break the load.
 
+![Bar chart of median days to close for the 12 most common Chicago 311 request types](docs/screenshot.png)
+
 ## Findings
 
 - Some services leave one in ten people waiting more than a year: half of bicycle requests
